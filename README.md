@@ -1,4 +1,3 @@
-schtasks /Change /TN "Bot\MirrorToVPS" /RI 1
+Get-OdbcDriver -Platform 64-bit | Select-Object Name | Sort-Object Name
 
 
-schtasks /Query /TN "Bot\MirrorToVPS" /V /FO LIST
