@@ -1,4 +1,4 @@
-# kpi_query_manual.py
+# C:\Monitor\kpi_query_daily.py
 import datetime as dt
 import pyodbc
 import requests
@@ -20,8 +20,8 @@ API_PUSH_URL = "https://monitor.serviciosbull.cl/api/kpi/daily/busy"
 API_USER = "admin"
 API_PASS = "Admin2026!"
 
-# FECHA QUE QUIERES CARGAR (manual)
-TARGET_DATE = dt.date(2026, 2, 26)
+# Siempre consulta el día anterior a la ejecución
+TARGET_DATE = dt.date.today() - dt.timedelta(days=1)
 
 fecha_ini = f"{TARGET_DATE.isoformat()}T00:00:00"
 fecha_fin = f"{TARGET_DATE.isoformat()}T23:59:59"
@@ -35,9 +35,7 @@ DECLARE @FechaFinAbierta datetime = DATEADD(SECOND, 1, @FechaFin);
 
 ;WITH
 SitesTable (SiteId, SiteAlias) AS (
-    SELECT
-        s.ID AS SiteId,
-        s.Alias AS SiteAlias
+    SELECT s.ID AS SiteId, s.Alias AS SiteAlias
     FROM dbo.RES_Sites_Full s
     WHERE s.SiteUniq IN (
         SELECT ID
@@ -46,43 +44,25 @@ SitesTable (SiteId, SiteAlias) AS (
     )
 ),
 Horas (sdt, edt) AS (
-    SELECT
-        CAST(@FechaIni AS datetime) AS sdt,
-        DATEADD(HOUR, 1, CAST(@FechaIni AS datetime)) AS edt
+    SELECT CAST(@FechaIni AS datetime) AS sdt, DATEADD(HOUR, 1, CAST(@FechaIni AS datetime)) AS edt
     UNION ALL
-    SELECT
-        DATEADD(HOUR, 1, sdt),
-        DATEADD(HOUR, 2, sdt)
+    SELECT DATEADD(HOUR, 1, sdt), DATEADD(HOUR, 2, sdt)
     FROM Horas
     WHERE DATEADD(HOUR, 1, sdt) < @FechaFinAbierta
 ),
 CallsHora AS (
-    SELECT
-        h.sdt,
-        c.SiteId,
-        COUNT_BIG(*) AS CantLlamadas
+    SELECT h.sdt, c.SiteId, COUNT_BIG(*) AS CantLlamadas
     FROM dbo.ARC_Calls_ReportView c
-    JOIN Horas h
-      ON c.StartDT >= h.sdt AND c.StartDT < h.edt
-    WHERE c.StartDT >= @FechaIni
-      AND c.StartDT <  @FechaFinAbierta
-    GROUP BY
-        h.sdt,
-        c.SiteId
+    JOIN Horas h ON c.StartDT >= h.sdt AND c.StartDT < h.edt
+    WHERE c.StartDT >= @FechaIni AND c.StartDT < @FechaFinAbierta
+    GROUP BY h.sdt, c.SiteId
 ),
 BusiesHora AS (
-    SELECT
-        h.sdt,
-        b.SiteId,
-        COUNT_BIG(*) AS CantBusys
+    SELECT h.sdt, b.SiteId, COUNT_BIG(*) AS CantBusys
     FROM dbo.ARC_Busies_ReportView b
-    JOIN Horas h
-      ON b.StartDT >= h.sdt AND b.StartDT < h.edt
-    WHERE b.StartDT >= @FechaIni
-      AND b.StartDT <  @FechaFinAbierta
-    GROUP BY
-        h.sdt,
-        b.SiteId
+    JOIN Horas h ON b.StartDT >= h.sdt AND b.StartDT < h.edt
+    WHERE b.StartDT >= @FechaIni AND b.StartDT < @FechaFinAbierta
+    GROUP BY h.sdt, b.SiteId
 )
 SELECT
     CAST(h.sdt AS date) AS Fecha,
@@ -93,12 +73,9 @@ SELECT
     CAST(ISNULL(b.CantBusys, 0) AS bigint) AS CantBusys
 FROM SitesTable s
 CROSS JOIN Horas h
-LEFT JOIN CallsHora c
-  ON c.sdt = h.sdt AND c.SiteId = s.SiteId
-LEFT JOIN BusiesHora b
-  ON b.sdt = h.sdt AND b.SiteId = s.SiteId
-ORDER BY
-    s.SiteAlias, Fecha, Hora
+LEFT JOIN CallsHora c ON c.sdt = h.sdt AND c.SiteId = s.SiteId
+LEFT JOIN BusiesHora b ON b.sdt = h.sdt AND b.SiteId = s.SiteId
+ORDER BY s.SiteAlias, Fecha, Hora
 OPTION (MAXRECURSION 0);
 """
 
@@ -121,6 +98,7 @@ def get_api_token():
     return r.json()["access_token"]
 
 def main():
+    print(f"Fecha objetivo (ayer): {TARGET_DATE.isoformat()}")
     print("Conectando SQL...")
     with pyodbc.connect(SQL_CONN, timeout=20) as cn:
         cur = cn.cursor()
@@ -137,7 +115,7 @@ def main():
         return
 
     payload = {
-        "kpi_date": TARGET_DATE.isoformat(),  # <- ahora coincide con la fecha consultada
+        "kpi_date": TARGET_DATE.isoformat(),
         "source": "GW3MTRBO_RTORO",
         "summary": rows,
         "chart": rows[:500],
@@ -153,3 +131,23 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+:: C:\Monitor\run_kpi_daily.bat
+@echo off
+cd /d C:\Monitor
+C:\Monitor\.venv\Scripts\python.exe C:\Monitor\kpi_query_daily.py >> C:\Monitor\kpi_daily.log 2>&1
+
+
+
+
+
+schtasks /Create /TN "Bot\KPI_Daily_Busy" /SC DAILY /ST 00:15 /TR "C:\Monitor\run_kpi_daily.bat" /RU "SYSTEM" /RL HIGHEST /F
+schtasks /Run /TN "Bot\KPI_Daily_Busy"
+schtasks /Query /TN "Bot\KPI_Daily_Busy" /V /FO LIST
+
+
+
