@@ -22,9 +22,13 @@ Get-Content C:\Monitor\bot_main.log -Tail 80
 
 
 
+@'
 @echo off
 cd /d C:\Monitor
 C:\Monitor\.venv\Scripts\python.exe C:\Monitor\kpi_query_daily.py >> C:\Monitor\kpi_daily.log 2>&1
+'@ | Set-Content -Path C:\Monitor\run_kpi_daily.bat -Encoding ascii
 
+
+cmd /c C:\Monitor\run_kpi_daily.bat
 
 schtasks /Create /TN "Bot\KPI_Daily_Busy" /SC DAILY /ST 00:15 /TR "C:\Monitor\run_kpi_daily.bat" /RU "SYSTEM" /RL HIGHEST /F
