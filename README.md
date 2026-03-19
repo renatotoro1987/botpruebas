@@ -1,34 +1,55 @@
-1690A670-A132-11EF-B866-BBC00315E515
+import requests
+import re
 
+URL = "http://10.100.105.32/ObjectIO"
 
-schtasks /Query /TN "Bot\BotMain" /V /FO LIST
-schtasks /Query /TN "Bot\MirrorToVPS" /V /FO LIST
+headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Content-Type": "text/xml"
+}
 
+def obtener_sesion():
+    payload = '<ioReq op="connect" id="1234567890abc"/>'
 
+    r = requests.post(URL, headers=headers, data=payload, timeout=10)
+    r.raise_for_status()
 
-@'
-@echo off
-cd /d C:\Monitor
-C:\Monitor\.venv\Scripts\python.exe C:\Monitor\bot_main.py >> C:\Monitor\bot_main.log 2>&1
-'@ | Set-Content -Path C:\Monitor\run_bot_main.bat -Encoding ascii
+    texto = r.text
+    print("Connect response:\n{}".format(texto))
 
-schtasks /Create /TN "Bot\BotMain" /SC ONSTART /DELAY 0000:30 /TR "C:\Monitor\run_bot_main.bat" /RU "SYSTEM" /RL HIGHEST /F
-schtasks /Run /TN "Bot\BotMain"
+    match = re.search(r'id="([a-z0-9]+)"', texto)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
+def leer_rsl(session_id):
+    payload = """<?xml version="1.0" encoding="UTF-8"?>
+<ioReq op="get" id="{}">
+    <object name="Slot1:performParamReading.1"/>
+</ioReq>
+""".format(session_id)
 
+    r = requests.post(URL, headers=headers, data=payload, timeout=10)
+    r.raise_for_status()
 
+    texto = r.text
+    print("\nRespuesta RSL:\n{}".format(texto))
 
-Get-Content C:\Monitor\bot_main.log -Tail 80
+    match = re.search(r'value="(-?\d+)"', texto)
+    if match:
+        valor = int(match.group(1)) / 100
+        print("\nRSL: {} dBm".format(valor))
+    else:
+        print("\nNo encontrado")
 
-
-
-@'
-@echo off
-cd /d C:\Monitor
-C:\Monitor\.venv\Scripts\python.exe C:\Monitor\kpi_query_daily.py >> C:\Monitor\kpi_daily.log 2>&1
-'@ | Set-Content -Path C:\Monitor\run_kpi_daily.bat -Encoding ascii
-
-
-cmd /c C:\Monitor\run_kpi_daily.bat
-
-schtasks /Create /TN "Bot\KPI_Daily_Busy" /SC DAILY /ST 00:15 /TR "C:\Monitor\run_kpi_daily.bat" /RU "SYSTEM" /RL HIGHEST /F
+if __name__ == "__main__":
+    try:
+        session_id = obtener_sesion()
+        if session_id:
+            print("\nSession ID: {}".format(session_id))
+            leer_rsl(session_id)
+        else:
+            print("No se pudo obtener sesión")
+    except Exception as e:
+        print("Error: {}".format(e))
