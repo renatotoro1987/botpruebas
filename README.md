@@ -28,3 +28,24 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+PS C:\Aviat> python .\p4.py
+HTTP: 200
+Respuesta:
+
+<?xml version="1.0" encoding="UTF-8"?><ioRes id="08d29ed9bc1528"><res op="subscribeEx"><address type="full"><ne>10.100.1
+05.32</ne><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1" value="NCC" dataType="string"><valueType>
+<value min="0" max="32"/></valueType></object><object name="terminal:sysDetailsInfoRadioName.0" value="Unnamed Radio. IN
+Uv3" dataType="string"><valueType><value min="0" max="32"/></valueType></object><object name="terminal:sysDetailsInfoSit
+eName.0" value="Site name not defined" dataType="string"><valueType><value min="0" max="32"/></valueType></object><objec
+t name="terminal:sysDetailsInfoContactDetails.0" value="" dataType="string"><valueType><value min="0" max="64"/></valueT
+ype></object><object name="terminal:ipConfigAdEntAddress.1" value="10.100.105.32" dataType="ipAddress"/><object name="te
+rminal:swDetailsVersion.1" value="08.17.03" dataType="string"><valueType><value min="0" max="64"/></valueType></object><
+/res></ioRes>
+PS C:\Aviat>
+
+
+
