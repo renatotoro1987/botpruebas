@@ -1,55 +1,36 @@
 import requests
 import re
 
-URL = "http://10.100.105.32/ObjectIO"
+BASE_URL = "http://10.100.105.32"
+
+session = requests.Session()
 
 headers = {
     "User-Agent": "Mozilla/5.0",
-    "Content-Type": "text/xml"
 }
 
-def obtener_sesion():
-    payload = '<ioReq op="connect" id="1234567890abc"/>'
-
-    r = requests.post(URL, headers=headers, data=payload, timeout=10)
+def iniciar_sesion():
+    # Paso 1: entrar al index (esto genera cookies)
+    r = session.get(BASE_URL + "/index.html", headers=headers, timeout=10)
     r.raise_for_status()
+    print("Index cargado OK")
 
-    texto = r.text
-    print("Connect response:\n{}".format(texto))
+def obtener_sesion():
+    payload = '<ioReq op="connect"/>'
 
-    match = re.search(r'id="([a-z0-9]+)"', texto)
+    r = session.post(BASE_URL + "/ObjectIO",
+                     headers={"Content-Type": "text/xml"},
+                     data=payload,
+                     timeout=10)
+
+    print("Respuesta connect:\n", r.text)
+
+    match = re.search(r'id="([a-z0-9]+)"', r.text)
     if match:
         return match.group(1)
-    else:
-        return None
-
-def leer_rsl(session_id):
-    payload = """<?xml version="1.0" encoding="UTF-8"?>
-<ioReq op="get" id="{}">
-    <object name="Slot1:performParamReading.1"/>
-</ioReq>
-""".format(session_id)
-
-    r = requests.post(URL, headers=headers, data=payload, timeout=10)
-    r.raise_for_status()
-
-    texto = r.text
-    print("\nRespuesta RSL:\n{}".format(texto))
-
-    match = re.search(r'value="(-?\d+)"', texto)
-    if match:
-        valor = int(match.group(1)) / 100
-        print("\nRSL: {} dBm".format(valor))
-    else:
-        print("\nNo encontrado")
+    return None
 
 if __name__ == "__main__":
-    try:
-        session_id = obtener_sesion()
-        if session_id:
-            print("\nSession ID: {}".format(session_id))
-            leer_rsl(session_id)
-        else:
-            print("No se pudo obtener sesión")
-    except Exception as e:
-        print("Error: {}".format(e))
+    iniciar_sesion()
+    session_id = obtener_sesion()
+    print("Session ID:", session_id)
