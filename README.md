@@ -1,36 +1,11 @@
-import requests
-import re
-
-BASE_URL = "http://10.100.105.32"
-
-session = requests.Session()
-
-headers = {
-    "User-Agent": "Mozilla/5.0",
-}
-
-def iniciar_sesion():
-    # Paso 1: entrar al index (esto genera cookies)
-    r = session.get(BASE_URL + "/index.html", headers=headers, timeout=10)
-    r.raise_for_status()
-    print("Index cargado OK")
-
-def obtener_sesion():
-    payload = '<ioReq op="connect"/>'
-
-    r = session.post(BASE_URL + "/ObjectIO",
-                     headers={"Content-Type": "text/xml"},
-                     data=payload,
-                     timeout=10)
-
-    print("Respuesta connect:\n", r.text)
-
-    match = re.search(r'id="([a-z0-9]+)"', r.text)
-    if match:
-        return match.group(1)
-    return None
-
-if __name__ == "__main__":
-    iniciar_sesion()
-    session_id = obtener_sesion()
-    print("Session ID:", session_id)
+curl 'http://10.100.105.32/ObjectIO' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: es-ES,es;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/xml;charset=UTF-8' \
+  -H 'Origin: http://10.100.105.32' \
+  -H 'Referer: http://10.100.105.32/index.htm' \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36' \
+  --data-raw '<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="Slot4:rfConfigFreqTx.0"/><object name="Slot4:rfConfigFreqRx.0"/></ioReq>' \
+  --compressed \
+  --insecure
