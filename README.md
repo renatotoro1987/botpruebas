@@ -1,11 +1,30 @@
-curl 'http://10.100.105.32/ObjectIO' \
-  -H 'Accept: */*' \
-  -H 'Accept-Language: es-ES,es;q=0.9' \
-  -H 'Connection: keep-alive' \
-  -H 'Content-Type: application/xml;charset=UTF-8' \
-  -H 'Origin: http://10.100.105.32' \
-  -H 'Referer: http://10.100.105.32/index.htm' \
-  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36' \
-  --data-raw '<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1"/><object name="terminal:sysDetailsInfoRadioName.0"/><object name="terminal:sysDetailsInfoSiteName.0"/><object name="terminal:sysDetailsInfoContactDetails.0"/><object name="terminal:ipConfigAdEntAddress.1"/><object name="terminal:swDetailsVersion.1"/></ioReq>' \
-  --compressed \
-  --insecure
+import requests
+
+URL = "http://10.100.105.32/ObjectIO"
+
+HEADERS = {
+    "Accept": "*/*",
+    "Accept-Language": "es-ES,es;q=0.9",
+    "Connection": "keep-alive",
+    "Content-Type": "application/xml;charset=UTF-8",
+    "Origin": "http://10.100.105.32",
+    "Referer": "http://10.100.105.32/index.htm",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+}
+
+PAYLOAD = """<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1"/><object name="terminal:sysDetailsInfoRadioName.0"/><object name="terminal:sysDetailsInfoSiteName.0"/><object name="terminal:sysDetailsInfoContactDetails.0"/><object name="terminal:ipConfigAdEntAddress.1"/><object name="terminal:swDetailsVersion.1"/></ioReq>"""
+
+def main():
+    try:
+        r = requests.post(URL, headers=HEADERS, data=PAYLOAD, timeout=15)
+        r.raise_for_status()
+
+        print("HTTP:", r.status_code)
+        print("Respuesta:\n")
+        print(r.text)
+
+    except Exception as e:
+        print("Error:", e)
+
+if __name__ == "__main__":
+    main()
