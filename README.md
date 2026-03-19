@@ -1,4 +1,5 @@
 import requests
+import re
 
 URL = "http://10.100.105.32/ObjectIO"
 
@@ -12,7 +13,11 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
 }
 
-PAYLOAD = """<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1"/><object name="terminal:sysDetailsInfoRadioName.0"/><object name="terminal:sysDetailsInfoSiteName.0"/><object name="terminal:sysDetailsInfoContactDetails.0"/><object name="terminal:ipConfigAdEntAddress.1"/><object name="terminal:swDetailsVersion.1"/></ioReq>"""
+CHANNEL_ID = "08d29ed9bc1528"
+
+PAYLOAD = """<ioReq op="subscribeEx" id="{id}"><address type="te"><te>0</te></address><object name="Slot4:performParamReading.1"/></ioReq>""".format(
+    id=CHANNEL_ID
+)
 
 def main():
     try:
@@ -23,29 +28,15 @@ def main():
         print("Respuesta:\n")
         print(r.text)
 
+        match = re.search(r'value="(-?\d+)"', r.text)
+        if match:
+            valor = int(match.group(1)) / 100
+            print("\nRSL: {} dBm".format(valor))
+        else:
+            print("\nNo se encontró un value numérico.")
+
     except Exception as e:
         print("Error:", e)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-PS C:\Aviat> python .\p4.py
-HTTP: 200
-Respuesta:
-
-<?xml version="1.0" encoding="UTF-8"?><ioRes id="08d29ed9bc1528"><res op="subscribeEx"><address type="full"><ne>10.100.1
-05.32</ne><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1" value="NCC" dataType="string"><valueType>
-<value min="0" max="32"/></valueType></object><object name="terminal:sysDetailsInfoRadioName.0" value="Unnamed Radio. IN
-Uv3" dataType="string"><valueType><value min="0" max="32"/></valueType></object><object name="terminal:sysDetailsInfoSit
-eName.0" value="Site name not defined" dataType="string"><valueType><value min="0" max="32"/></valueType></object><objec
-t name="terminal:sysDetailsInfoContactDetails.0" value="" dataType="string"><valueType><value min="0" max="64"/></valueT
-ype></object><object name="terminal:ipConfigAdEntAddress.1" value="10.100.105.32" dataType="ipAddress"/><object name="te
-rminal:swDetailsVersion.1" value="08.17.03" dataType="string"><valueType><value min="0" max="64"/></valueType></object><
-/res></ioRes>
-PS C:\Aviat>
-
-
-
