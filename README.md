@@ -1,11 +1,2 @@
-curl 'http://10.100.105.32/ObjectIO' \
-  -H 'Accept: */*' \
-  -H 'Accept-Language: es-ES,es;q=0.9' \
-  -H 'Connection: keep-alive' \
-  -H 'Content-Type: application/xml;charset=UTF-8' \
-  -H 'Origin: http://10.100.105.32' \
-  -H 'Referer: http://10.100.105.32/index.htm' \
-  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36' \
-  --data-raw '<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="Slot4:rfConfigFreqTx.0"/><object name="Slot4:rfConfigFreqRx.0"/></ioReq>' \
-  --compressed \
-  --insecure
+
+<ioReq op="subscribeEx" id="08d29ed9bc1528"><address type="te"><te>0</te></address><object name="terminal:mfgDetailsInfoUnitType.1"/><object name="terminal:sysDetailsInfoRadioName.0"/><object name="terminal:sysDetailsInfoSiteName.0"/><object name="terminal:sysDetailsInfoContactDetails.0"/><object name="terminal:ipConfigAdEntAddress.1"/><object name="terminal:swDetailsVersion.1"/></ioReq>
