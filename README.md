@@ -9,7 +9,6 @@ HEADERS = {
 }
 
 def generar_id():
-    # Genera un ID tipo session válido
     return uuid.uuid4().hex[:16]
 
 def obtener_rsl():
@@ -25,15 +24,21 @@ def obtener_rsl():
     r = requests.post(URL, headers=HEADERS, data=payload, timeout=10)
     r.raise_for_status()
 
-    match = re.search(r'value="(-?\d+)"', r.text)
+    print("Respuesta cruda:")
+    print(r.text)
 
+    match = re.search(r'value="(-?\d+)"', r.text)
     if match:
         return int(match.group(1)) / 100
+
     return None
 
 if __name__ == "__main__":
     try:
         rsl = obtener_rsl()
-        print(rsl if rsl is not None else 0)
-    except:
-        print(0)
+        if rsl is None:
+            print("No se obtuvo RSL")
+        else:
+            print(rsl)
+    except Exception as e:
+        print("Error:", e)
